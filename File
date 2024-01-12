@@ -1,0 +1,90 @@
+
+import SwiftUI
+import Foundation
+import UserNotifications
+
+// MARK: ContentView
+struct ContentView: View {
+    @StateObject private var notificationManager = NotificationManager()
+    @State private var currentTime: Date = Date()
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect() // Update every second
+
+    var body: some View {
+        Text("\(formatTime(currentTime))")
+            .font(.largeTitle)
+            .onReceive(timer) { _ in
+                self.currentTime = Date()
+            }
+            .onAppear {
+                notificationManager.scheduleNotification()
+            }
+    }
+
+    func formatTime(_ date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeStyle = .medium
+        return dateFormatter.string(from: date)
+    }
+}
+
+// MARK: NotificationManager
+class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterDelegate {
+    @Published var hr = 13
+    @Published var min = 24
+    @Published var word = false
+
+    override init() {
+        super.init()
+        UNUserNotificationCenter.current().delegate = self
+    }
+
+    func scheduleNotification() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if granted {
+                let content = UNMutableNotificationContent()
+                content.title = "Wake Up"
+                content.body = "It's time!"
+                content.sound = UNNotificationSound(named: UNNotificationSoundName("wakeup.wav"))
+
+                var dateComponents = DateComponents()
+                dateComponents.hour = self.hr
+                dateComponents.minute = self.min
+
+                let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+                let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+
+                center.add(request) { error in
+                    if let error = error {
+                        print("Error scheduling notification: \(error)")
+                    } else {
+                        print("Notification scheduled for \(self.hr):\(self.min)")
+                    }
+                }
+            } else {
+                print("Permission denied for notifications.")
+            }
+        }
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        self.min += 1
+        if self.min >= 60 {
+            self.min = 0
+            self.hr += 1
+        }
+
+        if !self.word { // Check your condition to continue scheduling
+            scheduleNotification()
+        }
+
+        completionHandler()
+    }
+}
+
+// MARK: Preview
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
