@@ -12,14 +12,11 @@ import UserNotifications
 struct ContentView: View {
     @StateObject private var notificationManager = NotificationManager()
     @State private var currentTime: Date = Date()
-    let wordleAnswers: [String] = [
-        "mural", "aging", "twirl", "scant", "lunge",
-        "cable", "stony", "final", "liner", "threw",
-        "brief", "route", "heard", "doing", "lunch",
-        "blond", "court", "stole", "thing", "large",
-        "north", "tweak", "still", "relic", "block",
-        "aloof", "snake", "ember"
-    ]
+    let wordleAnswers: [String] = ["polyp","earth","storm","until","taper","enter","child",
+                                   "adopt","minor","fatty","husky","brave","filet","slime",
+                                   "glint","tread","steal","regal","guest","every","murky",
+                                   "share","spore","hoist","buxom","inner","otter","dimly",
+                                   "level"]
     
     @State private var secretWord: String = ""
     @State private var wordle: String = ""
